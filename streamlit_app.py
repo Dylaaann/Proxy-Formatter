@@ -46,3 +46,9 @@ if uploaded_file:
 
     st.subheader("Auto Proxies")
     st.write("\n".join(auto_lines))
+
+    # Combine all the converted proxies into one text
+    combined_text = "\n".join(["HTTP Proxies:"] + http_lines + ["\nSocks5 Proxies:"] + socks5_lines + ["\nAuto Proxies:"] + auto_lines)
+
+    # Download button for all proxies
+    st.download_button(label="Download All Proxies", data=combined_text, file_name="all_proxies.txt", mime="text/plain")
