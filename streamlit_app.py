@@ -25,6 +25,12 @@ def process_file(file_content):
 
     return http_lines, socks5_lines, auto_lines
 
+# Calculate the height for the text areas based on the number of lines
+def calculate_text_area_height(lines):
+    base_height = 30  # Base height to accommodate a small amount of text
+    line_height = 18  # Approximate height of a single line of text
+    return base_height + len(lines) * line_height
+
 # Streamlit App
 st.title("📄 Proxy Format Converter")
 st.write("Upload a .txt file with proxy credentials to get converted URLs displayed below.")
@@ -37,15 +43,18 @@ if uploaded_file:
     file_content = uploaded_file.read().decode("utf-8")
     http_lines, socks5_lines, auto_lines = process_file(file_content)
 
-    # Display the converted URLs
+    # Display the converted URLs with dynamically adjusted text boxes
     st.subheader("HTTP Proxies")
-    st.write("\n".join(http_lines))
+    http_text = "\n".join(http_lines)
+    st.text_area("", http_text, height=calculate_text_area_height(http_lines), key="http_proxies")
 
     st.subheader("Socks5 Proxies")
-    st.write("\n".join(socks5_lines))
+    socks5_text = "\n".join(socks5_lines)
+    st.text_area("", socks5_text, height=calculate_text_area_height(socks5_lines), key="socks5_proxies")
 
     st.subheader("Auto Proxies")
-    st.write("\n".join(auto_lines))
+    auto_text = "\n".join(auto_lines)
+    st.text_area("", auto_text, height=calculate_text_area_height(auto_lines), key="auto_proxies")
 
     # Combine all the converted proxies into one text
     combined_text = "\n".join(["HTTP Proxies:"] + http_lines + ["\nSocks5 Proxies:"] + socks5_lines + ["\nAuto Proxies:"] + auto_lines)
