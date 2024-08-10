@@ -1,53 +1,48 @@
 import streamlit as st
-from openai import OpenAI
 
-# Show title and description.
-st.title("📄 Document question answering")
-st.write(
-    "Upload a document below and ask a question about it – GPT will answer! "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-)
+def convert_format(input_str):
+    username, password, ip, port = input_str.strip().split(':')
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+    http_url = f"http://{username}:{password}@{ip}:{port}"
+    socks5_url = f"socks5://{username}:{password}@{ip}:{port}"
+    auto_url = f"auto://{username}:{password}@{ip}:{port}"
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+    return http_url, socks5_url, auto_url
 
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
-    )
+def process_file(file_content):
+    lines = file_content.strip().splitlines()
 
-    # Ask the user for a question via `st.text_area`.
-    question = st.text_area(
-        "Now ask a question about the document!",
-        placeholder="Can you give me a short summary?",
-        disabled=not uploaded_file,
-    )
+    http_lines = []
+    socks5_lines = []
+    auto_lines = []
 
-    if uploaded_file and question:
+    for line in lines:
+        if line.strip():
+            http_url, socks5_url, auto_url = convert_format(line)
+            http_lines.append(http_url)
+            socks5_lines.append(socks5_url)
+            auto_lines.append(auto_url)
 
-        # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
-        messages = [
-            {
-                "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
-            }
-        ]
+    return http_lines, socks5_lines, auto_lines
 
-        # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            stream=True,
-        )
+# Streamlit App
+st.title("📄 Proxy Format Converter")
+st.write("Upload a .txt file with proxy credentials to get converted URLs displayed below.")
 
-        # Stream the response to the app using `st.write_stream`.
-        st.write_stream(stream)
+# File uploader
+uploaded_file = st.file_uploader("User:Pass:IP:Port", type="txt")
+
+if uploaded_file:
+    # Read and process the uploaded file
+    file_content = uploaded_file.read().decode("utf-8")
+    http_lines, socks5_lines, auto_lines = process_file(file_content)
+
+    # Display the converted URLs
+    st.subheader("HTTP Proxies")
+    st.write("\n".join(http_lines))
+
+    st.subheader("Socks5 Proxies")
+    st.write("\n".join(socks5_lines))
+
+    st.subheader("Auto Proxies")
+    st.write("\n".join(auto_lines))
