@@ -122,3 +122,4 @@ if uploaded_file:
 
     # Download button for all proxies
     st.download_button(label="Download All Proxies", data=combined_text, file_name="all_proxies.txt", mime="text/plain")
+
