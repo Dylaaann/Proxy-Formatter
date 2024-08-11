@@ -57,8 +57,8 @@ def swap_at_colon(input_str):
 
     return swapped_http, swapped_socks5, swapped_auto
 
-def process_file(file_content, swap=False, swap_colon=False):
-    lines = file_content.strip().splitlines()
+def process_input(input_text, swap=False, swap_colon=False, remove_prefix=False):
+    lines = input_text.strip().splitlines()
 
     http_lines = []
     socks5_lines = []
@@ -71,55 +71,39 @@ def process_file(file_content, swap=False, swap_colon=False):
                 http_url, socks5_url, auto_url = reverse_format(http_url)
             if swap_colon:
                 http_url, socks5_url, auto_url = swap_at_colon(http_url)
+            if remove_prefix:
+                http_url = http_url.split("://")[1]
+                socks5_url = socks5_url.split("://")[1]
+                auto_url = auto_url.split("://")[1]
             http_lines.append(http_url)
             socks5_lines.append(socks5_url)
             auto_lines.append(auto_url)
 
     return http_lines, socks5_lines, auto_lines
 
-# Calculate the height for the text areas based on the number of lines
-def calculate_text_area_height(lines):
-    base_height = 30  # Base height to accommodate a small amount of text
-    line_height = 18  # Approximate height of a single line of text
-    return base_height + len(lines) * line_height
-
 # Streamlit App
 st.title("📄 Proxy Format Converter")
-st.write("Upload a .txt file with proxy credentials to get converted URLs displayed below.")
+st.write("Paste your proxy credentials below to get converted URLs displayed.")
 
-# File uploader
-uploaded_file = st.file_uploader("User:Pass:IP:Port", type="txt")
+# Text area for input
+input_text = st.text_area("User:Pass:IP:Port", height=200)
 
 # Swap options
 swap_option = st.checkbox("Swap IP:Port and Username:Password")
 swap_colon_option = st.checkbox("Swap '@' with ':'")
 
-if uploaded_file:
-    # Read and process the uploaded file
-    file_content = uploaded_file.read().decode("utf-8")
-    http_lines, socks5_lines, auto_lines = process_file(file_content, swap=swap_option, swap_colon=swap_colon_option)
+# Option to remove prefixes
+remove_prefix = st.checkbox("Remove 'http://', 'socks5://', or 'auto://' prefixes")
 
-    # Display the converted URLs with dynamically adjusted text boxes
-    col1, col2, col3 = st.columns([4, 0.5, 4])
-
-    with col1:
-        st.subheader("HTTP Proxies")
-        http_text = "\n".join(http_lines)
-        st.text_area("", http_text, height=calculate_text_area_height(http_lines), key="http_proxies")
-
-    with col3:
-        st.subheader("Socks5 Proxies")
-        socks5_text = "\n".join(socks5_lines)
-        st.text_area("", socks5_text, height=calculate_text_area_height(socks5_lines), key="socks5_proxies")
-
-    with col3:
-        st.subheader("Auto Proxies")
-        auto_text = "\n".join(auto_lines)
-        st.text_area("", auto_text, height=calculate_text_area_height(auto_lines), key="auto_proxies")
+if input_text:
+    # Process the pasted input text
+    http_lines, socks5_lines, auto_lines = process_input(input_text, swap=swap_option, swap_colon=swap_colon_option, remove_prefix=remove_prefix)
 
     # Combine all the converted proxies into one text
     combined_text = "\n".join(["HTTP Proxies:"] + http_lines + ["\nSocks5 Proxies:"] + socks5_lines + ["\nAuto Proxies:"] + auto_lines)
 
+    # Display the combined output in a single text box
+    st.text_area("Converted Proxies", combined_text, height=300)
+
     # Download button for all proxies
     st.download_button(label="Download All Proxies", data=combined_text, file_name="all_proxies.txt", mime="text/plain")
-
