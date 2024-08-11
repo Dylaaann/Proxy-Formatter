@@ -88,6 +88,9 @@ st.write("Paste your proxy credentials below to get converted URLs displayed.")
 # Text area for input
 input_text = st.text_area("User:Pass:IP:Port", height=200)
 
+# File uploader
+uploaded_file = st.file_uploader("", type="txt")
+
 # Swap options
 swap_option = st.checkbox("Swap IP:Port and Username:Password")
 swap_colon_option = st.checkbox("Swap '@' with ':'")
@@ -95,8 +98,12 @@ swap_colon_option = st.checkbox("Swap '@' with ':'")
 # Option to remove prefixes
 remove_prefix = st.checkbox("Remove 'http://', 'socks5://', or 'auto://' prefixes")
 
-if input_text:
-    # Process the pasted input text
+# Process the input text or uploaded file
+if input_text or uploaded_file:
+    if uploaded_file:
+        file_content = uploaded_file.read().decode("utf-8")
+        input_text = file_content.strip()
+
     http_lines, socks5_lines, auto_lines = process_input(input_text, swap=swap_option, swap_colon=swap_colon_option, remove_prefix=remove_prefix)
 
     # Combine all the converted proxies into one text
